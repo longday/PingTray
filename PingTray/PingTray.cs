@@ -85,7 +85,8 @@ namespace WindowsFormsApplication1
 
             pingHistory = new List<String>();
 
-            doPingThread = new Thread(DoPing);            
+            doPingThread = new Thread(DoPingLoop);
+            doPingThread.Start();         
         }
 
         void notifyIcon_MouseClick(object sender, MouseEventArgs e)
@@ -167,17 +168,19 @@ namespace WindowsFormsApplication1
                 pingHistoryString += pingHistoryElement;
 
             }
-        }        
+        }
+
+        private void DoPingLoop()
+        {
+            while (true)
+            {
+                DoPing();
+                Thread.Sleep(500);
+            }
+        }
 
         private void timerPing_Tick(object sender, EventArgs e)
-        {
-            if (doPingThread.ThreadState != ThreadState.Running)
-            {                
-                doPingThread.Abort();
-                doPingThread = new Thread(DoPing);
-                doPingThread.Start();
-            }
-
+        {       
             notifyIcon.BalloonTipText = pingHistoryString;
             GetIcon(notifyIcon, Convert.ToString(lastReplyTime));        
         }
