@@ -18,6 +18,13 @@ namespace WindowsFormsApplication1
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
         extern static bool DestroyIcon(IntPtr handle);
 
+        NotifyIcon notifyIcon;
+        List<String> pingHistory;
+        String pingHistoryString;
+        long lastReplyTime;
+        Thread doPingThread;
+        String pingAdresString;
+
         private void GetIcon(NotifyIcon notiIcon, string text)
         {
             Bitmap bitmap = new Bitmap(32, 32);
@@ -57,11 +64,7 @@ namespace WindowsFormsApplication1
             bitmap.Dispose();
         }
 
-        NotifyIcon notifyIcon;
-        List<String> pingHistory;
-        String pingHistoryString;
-        long lastReplyTime;
-        Thread doPingThread;
+       
         
         public PingTrayForm()
         {
@@ -71,6 +74,7 @@ namespace WindowsFormsApplication1
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            doPingThread.Abort();
             notifyIcon.Visible = false;
         }
 
@@ -80,8 +84,9 @@ namespace WindowsFormsApplication1
             notifyIcon.MouseClick += new MouseEventHandler(notifyIcon_MouseClick);
 
             notifyIcon.Visible = true;
-            
-            pingAdres.Text = "ya.ru";
+
+            pingAdresString = "ya.ru";
+            pingAdres.Text = "ya.ru";            
 
             pingHistory = new List<String>();
 
@@ -92,7 +97,7 @@ namespace WindowsFormsApplication1
         void notifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-            {                
+            {       
                 notifyIcon.ShowBalloonTip(10000);
             };
 
@@ -125,7 +130,7 @@ namespace WindowsFormsApplication1
 
         private void DoPing()
         {
-            if (pingAdres.Text == "")
+            if (pingAdresString == "")
                 return;
 
             Ping ping = new Ping();
@@ -135,7 +140,7 @@ namespace WindowsFormsApplication1
 
             try
             {
-                PingReply reply = ping.Send(pingAdres.Text);
+                PingReply reply = ping.Send(pingAdresString);
 
                 replyTime = reply.RoundtripTime;
             }
@@ -181,8 +186,30 @@ namespace WindowsFormsApplication1
 
         private void timerPing_Tick(object sender, EventArgs e)
         {       
-            notifyIcon.BalloonTipText = pingHistoryString;
+            notifyIcon.BalloonTipText = pingHistoryString;            
             GetIcon(notifyIcon, Convert.ToString(lastReplyTime));        
+        }
+
+        private void btnApply_Click(object sender, EventArgs e)
+        {
+            pingAdresString = pingAdres.Text;
+            pingAdres.ForeColor = SystemColors.WindowText;
+            btnApply.Visible = false;
+        }
+
+        private void pingAdres_TextChanged(object sender, EventArgs e)
+        {
+            if (pingAdres.Text != pingAdresString)
+            {
+                pingAdres.ForeColor = Color.Gray;
+                btnApply.Visible = true;
+            }
+            else
+            {
+                pingAdres.ForeColor = SystemColors.WindowText;
+                btnApply.Visible = false;
+            }
+
         }
     }
 }
