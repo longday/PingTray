@@ -24,6 +24,7 @@ namespace WindowsFormsApplication1
         long lastReplyTime;
         Thread doPingThread;
         String pingAdresString;
+        Color textColor = Color.LightGreen;
 
         private void GetIcon(NotifyIcon notiIcon, string text)
         {
@@ -45,7 +46,7 @@ namespace WindowsFormsApplication1
                     break;
             }
             System.Drawing.Font drawFont = new System.Drawing.Font("Calibri", fontsize, FontStyle.Bold);
-            System.Drawing.SolidBrush drawBrush = new System.Drawing.SolidBrush(System.Drawing.Color.LightGreen);
+            System.Drawing.SolidBrush drawBrush = new System.Drawing.SolidBrush(textColor);
 
             System.Drawing.Graphics graphics = System.Drawing.Graphics.FromImage(bitmap);
 
@@ -64,12 +65,41 @@ namespace WindowsFormsApplication1
             bitmap.Dispose();
         }
 
-       
-        
-        public PingTrayForm()
+        private void ParseArgs(String[] args)
         {
-            InitializeComponent();
-                        
+            String currentArgType = "";
+            foreach (String arg in args)
+            {
+                switch (currentArgType)
+                {
+                    case "ip":
+                        pingAdresString = arg;
+                        currentArgType = "";
+                        break;
+                    case "color":
+                        Color textColorFromArg = Color.FromName(arg);
+                        if (textColorFromArg.IsKnownColor)
+                            textColor = textColorFromArg;
+                        currentArgType = "";
+                        break;
+                }
+
+                switch (arg)
+                {
+                    case "/ip":
+                        currentArgType = "ip";
+                        break;
+                    case "/color":
+                        currentArgType = "color";
+                        break;
+                }
+            }
+        }
+        
+        public PingTrayForm(String []args)
+        {
+            ParseArgs(args);
+            InitializeComponent();                        
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -85,8 +115,9 @@ namespace WindowsFormsApplication1
 
             notifyIcon.Visible = true;
 
-            pingAdresString = "ya.ru";
-            pingAdres.Text = "ya.ru";            
+            if(pingAdresString == null)
+                pingAdresString = "ya.ru";
+            pingAdres.Text = pingAdresString;            
 
             pingHistory = new List<String>();
 
