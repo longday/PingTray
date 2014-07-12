@@ -15,8 +15,17 @@ namespace WindowsFormsApplication1
 {
     public partial class PingTrayForm : Form
     {
-        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         extern static bool DestroyIcon(IntPtr handle);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int SetWindowLong(IntPtr window, int index, int value);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowLong(IntPtr window, int index);
+
+
+        const int GWL_EXSTYLE = -20;
+        const int WS_EX_TOOLWINDOW = 0x00000080;
+        const int WS_EX_APPWINDOW = 0x00040000;
 
         NotifyIcon notifyIcon;
         List<String> pingHistory;
@@ -110,6 +119,10 @@ namespace WindowsFormsApplication1
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //Make it gone frmo the ALT+TAB
+            int windowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+            SetWindowLong(Handle, GWL_EXSTYLE, windowStyle | WS_EX_TOOLWINDOW);
+
             notifyIcon = new NotifyIcon();
             notifyIcon.MouseClick += new MouseEventHandler(notifyIcon_MouseClick);
 
@@ -177,7 +190,8 @@ namespace WindowsFormsApplication1
             }
             catch (Exception ex)
             {
-                errorString = ex.InnerException.Message;
+                if(ex.InnerException != null)
+                    errorString = ex.InnerException.Message;
             }
 
             String ReplyString = Convert.ToString(replyTime);
