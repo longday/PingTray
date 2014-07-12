@@ -119,10 +119,6 @@ namespace WindowsFormsApplication1
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //Make it gone frmo the ALT+TAB
-            int windowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
-            SetWindowLong(Handle, GWL_EXSTYLE, windowStyle | WS_EX_TOOLWINDOW);
-
             notifyIcon = new NotifyIcon();
             notifyIcon.MouseClick += new MouseEventHandler(notifyIcon_MouseClick);
 
@@ -135,7 +131,13 @@ namespace WindowsFormsApplication1
             pingHistory = new List<String>();
 
             doPingThread = new Thread(DoPingLoop);
-            doPingThread.Start();         
+            doPingThread.Start();
+
+            this.WindowState = FormWindowState.Minimized;
+            this.ShowInTaskbar = false;
+            int windowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+            SetWindowLong(Handle, GWL_EXSTYLE, windowStyle | WS_EX_TOOLWINDOW);
+
         }
 
         void notifyIcon_MouseClick(object sender, MouseEventArgs e)
@@ -157,6 +159,8 @@ namespace WindowsFormsApplication1
                     
                     this.WindowState = FormWindowState.Minimized;
                     this.ShowInTaskbar = false;
+                    int windowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+                    SetWindowLong(Handle, GWL_EXSTYLE, windowStyle | WS_EX_TOOLWINDOW);
                 }
 
             };
@@ -169,6 +173,8 @@ namespace WindowsFormsApplication1
             if (this.WindowState == FormWindowState.Minimized)
             {
                 this.ShowInTaskbar = false;
+                int windowStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+                SetWindowLong(Handle, GWL_EXSTYLE, windowStyle | WS_EX_TOOLWINDOW);
             }
         }
 

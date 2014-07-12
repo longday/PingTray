@@ -90,9 +90,7 @@
             this.Controls.Add(this.pingAdres);
             this.Controls.Add(this.label1);
             this.Name = "PingTrayForm";
-            this.ShowInTaskbar = false;
             this.Text = "Ping Tray";
-            this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
