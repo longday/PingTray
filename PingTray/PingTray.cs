@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using System.Net.NetworkInformation;
-using System.Threading;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Windows.Forms;
 
-
-namespace WindowsFormsApplication1
+namespace PingTray
 {
     public partial class PingTrayForm : Form
     {
@@ -23,23 +18,24 @@ namespace WindowsFormsApplication1
         public static extern int GetWindowLong(IntPtr window, int index);
 
 
+// ReSharper disable InconsistentNaming
         const int GWL_EXSTYLE = -20;
         const int WS_EX_TOOLWINDOW = 0x00000080;
-        const int WS_EX_APPWINDOW = 0x00040000;
+// ReSharper restore InconsistentNaming
 
-        NotifyIcon notifyIcon;
-        List<String> pingHistory;
-        String pingHistoryString;
-        long lastReplyTime;
-        Thread doPingThread;
-        String pingAdresString;
-        Color textColor = Color.LightGreen;
+        NotifyIcon _notifyIcon;
+        List<String> _pingHistory;
+        String _pingHistoryString;
+        long _lastReplyTime;
+        Thread _doPingThread;
+        String _pingAdresString;
+        Color _textColor = Color.LightGreen;
 
         private void GetIcon(NotifyIcon notiIcon, string text)
         {
-            Bitmap bitmap = new Bitmap(32, 32);
+            var bitmap = new Bitmap(32, 32);
 
-            int fontsize = 0;
+            int fontsize;
             switch (text.Length)
             {
                 case 0:
@@ -54,10 +50,10 @@ namespace WindowsFormsApplication1
                     fontsize = 16;
                     break;
             }
-            System.Drawing.Font drawFont = new System.Drawing.Font("Calibri", fontsize, FontStyle.Bold);
-            System.Drawing.SolidBrush drawBrush = new System.Drawing.SolidBrush(textColor);
+            var drawFont = new Font("Calibri", fontsize, FontStyle.Bold);
+            var drawBrush = new SolidBrush(_textColor);
 
-            System.Drawing.Graphics graphics = System.Drawing.Graphics.FromImage(bitmap);
+            var graphics = Graphics.FromImage(bitmap);
 
             graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
             graphics.DrawString(text, drawFont, drawBrush, 1, 2);
@@ -74,7 +70,7 @@ namespace WindowsFormsApplication1
             bitmap.Dispose();
         }
 
-        private void ParseArgs(String[] args)
+        private void ParseArgs(IEnumerable<string> args)
         {
             String currentArgType = "";
             foreach (String arg in args)
@@ -82,13 +78,13 @@ namespace WindowsFormsApplication1
                 switch (currentArgType)
                 {
                     case "ip":
-                        pingAdresString = arg;
+                        _pingAdresString = arg;
                         currentArgType = "";
                         break;
                     case "color":
                         Color textColorFromArg = Color.FromName(arg);
                         if (textColorFromArg.IsKnownColor)
-                            textColor = textColorFromArg;
+                            _textColor = textColorFromArg;
                         currentArgType = "";
                         break;
                 }
@@ -105,7 +101,7 @@ namespace WindowsFormsApplication1
             }
         }
         
-        public PingTrayForm(String []args)
+        public PingTrayForm(IEnumerable<string> args)
         {
             ParseArgs(args);
             InitializeComponent();                        
@@ -113,25 +109,33 @@ namespace WindowsFormsApplication1
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            doPingThread.Abort();
-            notifyIcon.Visible = false;
+            if (e.CloseReason != CloseReason.UserClosing || MessageBox.Show("Точно закрыть?", "Выход", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            {
+                _doPingThread.Abort();
+                _notifyIcon.Visible = false;    
+            }
+            else
+            {
+                e.Cancel = true;
+            }
+            
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            notifyIcon = new NotifyIcon();
-            notifyIcon.MouseClick += new MouseEventHandler(notifyIcon_MouseClick);
+            _notifyIcon = new NotifyIcon();
+            _notifyIcon.MouseClick += notifyIcon_MouseClick;
 
-            notifyIcon.Visible = true;
+            _notifyIcon.Visible = true;
 
-            if(pingAdresString == null)
-                pingAdresString = "ya.ru";
-            pingAdres.Text = pingAdresString;            
+            if(_pingAdresString == null)
+                _pingAdresString = "ya.ru";
+            pingAdres.Text = _pingAdresString;            
 
-            pingHistory = new List<String>();
+            _pingHistory = new List<String>();
 
-            doPingThread = new Thread(DoPingLoop);
-            doPingThread.Start();
+            _doPingThread = new Thread(DoPingLoop);
+            _doPingThread.Start();
 
             this.WindowState = FormWindowState.Minimized;
             this.ShowInTaskbar = false;
@@ -142,13 +146,13 @@ namespace WindowsFormsApplication1
 
         void notifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
-            {       
-                notifyIcon.ShowBalloonTip(10000);
-            };
+            //if (e.Button == MouseButtons.Left)
+            //{       
+                //_notifyIcon.ShowBalloonTip(10000);
+            //}
 
-            if (e.Button == System.Windows.Forms.MouseButtons.Right)
-            {
+            //if (e.Button == MouseButtons.Left)
+            //{
                 if (this.WindowState == FormWindowState.Minimized)
                 {                    
                     this.WindowState = FormWindowState.Normal;
@@ -163,9 +167,7 @@ namespace WindowsFormsApplication1
                     SetWindowLong(Handle, GWL_EXSTYLE, windowStyle | WS_EX_TOOLWINDOW);
                 }
 
-            };
-
-            
+            //}
         }
 
         private void Form1_Resize(object sender, EventArgs e)
@@ -180,48 +182,53 @@ namespace WindowsFormsApplication1
 
         private void DoPing()
         {
-            if (pingAdresString == "")
+            if (_pingAdresString == "")
                 return;
 
-            Ping ping = new Ping();
+            var ping = new Ping();
 
             long replyTime = 0;
-            String errorString = "";
+
+            String replyString = "";
 
             try
             {
-                PingReply reply = ping.Send(pingAdresString);
+                PingReply reply = ping.Send(_pingAdresString);
 
-                replyTime = reply.RoundtripTime;
+                if (reply.Status == IPStatus.Success)
+                    replyTime = reply.RoundtripTime;
+
+                replyString = "Время ответа: " + Convert.ToString(replyTime);
+
+                if (replyTime == 0)
+                    replyString += "(" + reply.Status.ToString() + ")";
+            
             }
             catch (Exception ex)
             {
-                if(ex.InnerException != null)
-                    errorString = ex.InnerException.Message;
+                if (ex.InnerException != null)
+                    replyString = ex.InnerException.Message;
             }
 
-            String ReplyString = Convert.ToString(replyTime);
+            
+            _lastReplyTime = replyTime;
 
-            lastReplyTime = replyTime;
+            
+            _pingHistory.Add(replyString);
 
-            if (replyTime == 0)
-                ReplyString += "(" + errorString + ")";
-
-            pingHistory.Add(ReplyString);
-
-            if (pingHistory.Count > 20)
+            if (_pingHistory.Count > 20)
             {
-                pingHistory.RemoveAt(0);
+                _pingHistory.RemoveAt(0);
             }
 
-            pingHistoryString = "";
+            _pingHistoryString = "";
 
-            foreach (String pingHistoryElement in pingHistory)
+            foreach (var pingHistoryElement in _pingHistory)
             {
-                if (pingHistoryString != "")
-                    pingHistoryString += Environment.NewLine;
+                if (_pingHistoryString != "")
+                    _pingHistoryString += Environment.NewLine;
 
-                pingHistoryString += pingHistoryElement;
+                _pingHistoryString += pingHistoryElement;
 
             }
         }
@@ -233,24 +240,26 @@ namespace WindowsFormsApplication1
                 DoPing();
                 Thread.Sleep(500);
             }
+// ReSharper disable once FunctionNeverReturns
         }
 
         private void timerPing_Tick(object sender, EventArgs e)
         {       
-            notifyIcon.BalloonTipText = pingHistoryString;            
-            GetIcon(notifyIcon, Convert.ToString(lastReplyTime));        
+            //_notifyIcon.BalloonTipText = _pingHistoryString;            
+            GetIcon(_notifyIcon, Convert.ToString(_lastReplyTime));
+            tbPingHistory.Text = _pingHistoryString;
         }
 
         private void btnApply_Click(object sender, EventArgs e)
         {
-            pingAdresString = pingAdres.Text;
+            _pingAdresString = pingAdres.Text;
             pingAdres.ForeColor = SystemColors.WindowText;
             btnApply.Visible = false;
         }
 
         private void pingAdres_TextChanged(object sender, EventArgs e)
         {
-            if (pingAdres.Text != pingAdresString)
+            if (pingAdres.Text != _pingAdresString)
             {
                 pingAdres.ForeColor = Color.Gray;
                 btnApply.Visible = true;

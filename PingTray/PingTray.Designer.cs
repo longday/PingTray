@@ -1,4 +1,4 @@
-﻿namespace WindowsFormsApplication1
+﻿namespace PingTray
 {
     partial class PingTrayForm
     {
@@ -34,6 +34,7 @@
             this.pingAdres = new System.Windows.Forms.TextBox();
             this.btnApply = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
+            this.tbPingHistory = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // timerPing
@@ -77,14 +78,26 @@
             this.label2.Size = new System.Drawing.Size(687, 13);
             this.label2.TabIndex = 3;
             this.label2.Text = "Параметры командной строки(порядок любой, наличие не обязательно): /ip <адрес или" +
-                " url> /color <цвет строкой (blue,lightgreen, etc)>";
+    " url> /color <цвет строкой (blue,lightgreen, etc)>";
+            // 
+            // tbPingHistory
+            // 
+            this.tbPingHistory.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbPingHistory.Location = new System.Drawing.Point(16, 70);
+            this.tbPingHistory.Multiline = true;
+            this.tbPingHistory.Name = "tbPingHistory";
+            this.tbPingHistory.Size = new System.Drawing.Size(687, 285);
+            this.tbPingHistory.TabIndex = 4;
             // 
             // PingTrayForm
             // 
             this.AcceptButton = this.btnApply;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(722, 63);
+            this.ClientSize = new System.Drawing.Size(717, 367);
+            this.Controls.Add(this.tbPingHistory);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnApply);
             this.Controls.Add(this.pingAdres);
@@ -106,6 +119,7 @@
         private System.Windows.Forms.TextBox pingAdres;
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tbPingHistory;
     }
 }
 
